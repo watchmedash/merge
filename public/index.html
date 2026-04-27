@@ -834,7 +834,6 @@ function dropSpikes(){
   sfx.spikeSpawn();
 }
 
-function simulateGift(){ dropSpikes(); }
 
 /* ══ TIKTOK WEBSOCKET ═══════════════════════════════════════ */
 let ttStatus='disconnected', ttUser='', ttIsLive=false;
@@ -852,13 +851,14 @@ function initWS(){
   clearTimeout(wsReconnectTimer);
   if(!authToken)return;
   try{
-    ws=new WebSocket(`ws://${location.host}?token=${authToken}`);
+    const proto=location.protocol==='https:'?'wss':'ws';
+    ws=new WebSocket(`${proto}://${location.host}?token=${authToken}`);
     ws.onmessage=e=>{
       const m=JSON.parse(e.data);
       if(isDupe(m))return;
       if(m.type==='status'){
         ttStatus=m.status;ttUser=m.username||'';
-        ttIsLive = m.isLive;
+        if(!m.isLive) ttIsLive=false;
         updateTTUI();
       }
       if(m.type==='gift'){
@@ -961,13 +961,15 @@ function startGame(){
 }
 
 function autoConnectTT(username){
-  api('/api/connect',{method:'POST',body:JSON.stringify({username})})
-    .then(r=>r.json()).catch(()=>{});
-  clearInterval(autoConnectTT._timer);
-  autoConnectTT._timer=setInterval(()=>{
-    if(ttStatus==='connected'){clearInterval(autoConnectTT._timer);return;}
+  const tryConnect=()=>{
     api('/api/connect',{method:'POST',body:JSON.stringify({username})})
       .then(r=>r.json()).catch(()=>{});
+  };
+  tryConnect();
+  clearInterval(autoConnectTT._timer);
+  autoConnectTT._timer=setInterval(()=>{
+    if(ttIsLive){clearInterval(autoConnectTT._timer);return;} // stop once confirmed live
+    tryConnect();
   },60000);
 }
 
@@ -980,15 +982,7 @@ if(authToken){
   }).then(data=>{
     if(!data)return;
     document.getElementById('login-screen').style.display='none';
-    clientStore=data;
-    document.fonts.ready.then(()=>{
-      sizeCanvas();drawNext();
-      buildMod(document.getElementById('desk-mod'));
-      document.getElementById('bv').textContent=hi.toLocaleString();
-      initWS();
-      requestAnimationFrame(loop);
-      if(data.ttUsername) autoConnectTT(data.ttUsername);
-    });
+    startGame();
   }).catch(()=>logout());
 }
 </script>
