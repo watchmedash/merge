@@ -858,7 +858,7 @@ function initWS(){
       if(isDupe(m))return;
       if(m.type==='status'){
         ttStatus=m.status;ttUser=m.username||'';
-        if(!m.isLive) ttIsLive=false;
+        ttIsLive = m.isLive;
         updateTTUI();
       }
       if(m.type==='gift'){
