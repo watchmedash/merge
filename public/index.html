@@ -830,13 +830,10 @@ function buildMod(root){
 }
 
 function dropSpikes(){
-  const r=Math.random();
-  const n=r<.45?1:r<.72?2:r<.88?3:r<.96?4:5;
-  for(let i=0;i<n;i++)setTimeout(()=>{
-    World.add(wd,Bodies.circle(Math.random()*(CW-80)+40,40,18,{label:'spike',restitution:.5,friction:.1}));
-    sfx.spikeSpawn();
-  },i*250);
+  World.add(wd,Bodies.circle(Math.random()*(CW-80)+40,40,18,{label:'spike',restitution:.5,friction:.1}));
+  sfx.spikeSpawn();
 }
+
 function simulateGift(){ dropSpikes(); }
 
 /* ══ TIKTOK WEBSOCKET ═══════════════════════════════════════ */
